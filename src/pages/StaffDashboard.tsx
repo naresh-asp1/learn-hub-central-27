@@ -8,8 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Plus } from "lucide-react";
+import { LogOut, Plus, CheckCircle, XCircle } from "lucide-react";
 
 interface Student {
   id: string;
@@ -25,10 +26,21 @@ interface StudentRecord {
   performance?: string;
 }
 
+interface StaffRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  rollNumber: string;
+  field: string;
+  newValue: string;
+  status: string;
+}
+
 const StaffDashboard = () => {
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
   const [records, setRecords] = useState<StudentRecord[]>([]);
+  const [requests, setRequests] = useState<StaffRequest[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState("");
   const [recordType, setRecordType] = useState<"marks" | "attendance" | "performance">("marks");
@@ -46,13 +58,74 @@ const StaffDashboard = () => {
 
     const savedStudents = JSON.parse(localStorage.getItem("students") || "[]");
     const savedRecords = JSON.parse(localStorage.getItem("studentRecords") || "[]");
+    const savedRequests = JSON.parse(localStorage.getItem("staffRequests") || "[]");
     setStudents(savedStudents);
     setRecords(savedRecords);
+    setRequests(savedRequests);
   }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     navigate("/auth");
+  };
+
+  const handleApproveRequest = (requestId: string) => {
+    const request = requests.find(r => r.id === requestId);
+    if (!request) return;
+
+    const existingRecord = records.find(r => r.studentId === request.studentId);
+    let updatedRecords;
+
+    if (request.field === "marks") {
+      const newRecord: StudentRecord = existingRecord || {
+        studentId: request.studentId,
+        studentName: request.studentName,
+        marks: {}
+      };
+      const [subject, value] = request.newValue.split(":");
+      newRecord.marks = { ...newRecord.marks, [subject]: parseFloat(value) };
+      
+      if (existingRecord) {
+        updatedRecords = records.map(r => r.studentId === request.studentId ? newRecord : r);
+      } else {
+        updatedRecords = [...records, newRecord];
+      }
+    } else if (request.field === "attendance") {
+      const newRecord: StudentRecord = existingRecord || {
+        studentId: request.studentId,
+        studentName: request.studentName
+      };
+      newRecord.attendance = parseFloat(request.newValue);
+      
+      if (existingRecord) {
+        updatedRecords = records.map(r => r.studentId === request.studentId ? newRecord : r);
+      } else {
+        updatedRecords = [...records, newRecord];
+      }
+    } else {
+      updatedRecords = records;
+    }
+
+    setRecords(updatedRecords);
+    localStorage.setItem("studentRecords", JSON.stringify(updatedRecords));
+
+    const updatedRequests = requests.map(r =>
+      r.id === requestId ? { ...r, status: "approved" } : r
+    );
+    setRequests(updatedRequests);
+    localStorage.setItem("staffRequests", JSON.stringify(updatedRequests));
+    
+    toast.success("Request approved");
+  };
+
+  const handleRejectRequest = (requestId: string) => {
+    const updatedRequests = requests.map(r =>
+      r.id === requestId ? { ...r, status: "rejected" } : r
+    );
+    setRequests(updatedRequests);
+    localStorage.setItem("staffRequests", JSON.stringify(updatedRequests));
+    
+    toast.success("Request rejected");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -117,6 +190,8 @@ const StaffDashboard = () => {
     setAttendance("");
     setPerformance("");
   };
+
+  const pendingRequests = requests.filter(r => r.status === "pending");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
@@ -214,10 +289,18 @@ const StaffDashboard = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="marks">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="marks">Marks</TabsTrigger>
                 <TabsTrigger value="attendance">Attendance</TabsTrigger>
                 <TabsTrigger value="performance">Performance</TabsTrigger>
+                <TabsTrigger value="requests">
+                  Requests
+                  {pendingRequests.length > 0 && (
+                    <Badge variant="destructive" className="ml-2">
+                      {pendingRequests.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="marks" className="space-y-4">
@@ -273,6 +356,44 @@ const StaffDashboard = () => {
                 ))}
                 {records.filter(r => r.performance).length === 0 && (
                   <p className="text-center text-muted-foreground py-8">No performance reports</p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="requests" className="space-y-4">
+                {pendingRequests.map(request => (
+                  <Card key={request.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <p className="font-semibold">{request.studentName}</p>
+                          <p className="text-sm text-muted-foreground">Roll No: {request.rollNumber}</p>
+                          <p className="text-sm">
+                            <span className="font-medium">Field:</span> {request.field}
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-medium">New Value:</span> {request.newValue}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleApproveRequest(request.id)}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Approve
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => handleRejectRequest(request.id)}
+                          >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {pendingRequests.length === 0 && (
+                  <p className="text-center text-muted-foreground py-8">No pending requests</p>
                 )}
               </TabsContent>
             </Tabs>

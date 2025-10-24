@@ -25,6 +25,7 @@ const StudentDashboard = () => {
   const [selectedStudent, setSelectedStudent] = useState("");
   const [field, setField] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [requestType, setRequestType] = useState<"staff" | "admin2">("admin2");
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -48,27 +49,29 @@ const StudentDashboard = () => {
     const student = students.find(s => s.id === selectedStudent);
     if (!student) return;
 
-    const oldValue = student[field as keyof Student] as string;
+    const storageKey = requestType === "staff" ? "staffRequests" : "changeRequests";
+    const requests = JSON.parse(localStorage.getItem(storageKey) || "[]");
     
-    const requests = JSON.parse(localStorage.getItem("changeRequests") || "[]");
     const newRequest = {
       id: Date.now().toString(),
       studentId: student.id,
       studentName: student.name,
+      rollNumber: student.rollNumber,
       field,
-      oldValue,
       newValue,
-      status: "pending"
+      status: "pending",
+      requestType
     };
     
     requests.push(newRequest);
-    localStorage.setItem("changeRequests", JSON.stringify(requests));
+    localStorage.setItem(storageKey, JSON.stringify(requests));
     
-    toast.success("Change request submitted");
+    toast.success(`Request submitted to ${requestType === "staff" ? "Staff" : "Admin2"}`);
     setIsRequestOpen(false);
     setSelectedStudent("");
     setField("");
     setNewValue("");
+    setRequestType("admin2");
   };
 
   return (
@@ -104,6 +107,21 @@ const StudentDashboard = () => {
                   </DialogHeader>
                   <form onSubmit={handleSubmitRequest} className="space-y-4">
                     <div className="space-y-2">
+                      <Label>Request Type</Label>
+                      <Select value={requestType} onValueChange={(value: "staff" | "admin2") => {
+                        setRequestType(value);
+                        setField("");
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin2">Admin2 (General Data)</SelectItem>
+                          <SelectItem value="staff">Staff (Marks/Attendance)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
                       <Label>Select Student</Label>
                       <Select value={selectedStudent} onValueChange={setSelectedStudent}>
                         <SelectTrigger>
@@ -125,10 +143,19 @@ const StudentDashboard = () => {
                           <SelectValue placeholder="Select field" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="name">Name</SelectItem>
-                          <SelectItem value="email">Email</SelectItem>
-                          <SelectItem value="class">Class</SelectItem>
-                          <SelectItem value="department">Department</SelectItem>
+                          {requestType === "staff" ? (
+                            <>
+                              <SelectItem value="marks">Marks</SelectItem>
+                              <SelectItem value="attendance">Attendance</SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="name">Name</SelectItem>
+                              <SelectItem value="email">Email</SelectItem>
+                              <SelectItem value="class">Class</SelectItem>
+                              <SelectItem value="department">Department</SelectItem>
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
