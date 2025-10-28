@@ -16,37 +16,21 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-4 bg-primary/10 rounded-full">
-              <GraduationCap className="h-12 w-12 text-primary" />
+      <Card className="w-full max-w-md border-2">
+        <CardHeader className="text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="p-6 bg-primary/10 rounded-full">
+              <GraduationCap className="h-20 w-20 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-3xl">Student Management System</CardTitle>
-          <CardDescription className="text-base mt-2">
-            Comprehensive platform for managing student data, academic records, and administrative tasks
-          </CardDescription>
+          <div>
+            <CardTitle className="text-4xl font-bold">NPV College</CardTitle>
+            <CardDescription className="text-base mt-3">
+              Student Management System
+            </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-4">
-            <div className="p-4 border rounded-lg bg-card">
-              <h3 className="font-semibold mb-2">Admin 1</h3>
-              <p className="text-sm text-muted-foreground">Manage student data with full CRUD operations</p>
-            </div>
-            <div className="p-4 border rounded-lg bg-card">
-              <h3 className="font-semibold mb-2">Admin 2</h3>
-              <p className="text-sm text-muted-foreground">Monitor records, verify data, and generate reports</p>
-            </div>
-            <div className="p-4 border rounded-lg bg-card">
-              <h3 className="font-semibold mb-2">Student</h3>
-              <p className="text-sm text-muted-foreground">View records and request data changes</p>
-            </div>
-            <div className="p-4 border rounded-lg bg-card">
-              <h3 className="font-semibold mb-2">Staff</h3>
-              <p className="text-sm text-muted-foreground">Update marks, attendance, and performance reports</p>
-            </div>
-          </div>
+        <CardContent>
           <Button className="w-full" size="lg" onClick={() => navigate("/auth")}>
             Get Started
           </Button>

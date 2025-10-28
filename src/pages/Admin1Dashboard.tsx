@@ -4,32 +4,61 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle } from "lucide-react";
 
 interface Student {
   id: string;
   name: string;
-  email: string;
   rollNumber: string;
-  class: string;
+  email: string;
   department: string;
+  courseCode: string;
+}
+
+interface Department {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface Staff {
+  id: string;
+  name: string;
+  email: string;
+  department: string;
+}
+
+interface ChangeRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  rollNumber: string;
+  field: string;
+  currentValue: string;
+  newValue: string;
+  status: string;
+  verifiedByAdmin2: boolean;
 }
 
 const Admin1Dashboard = () => {
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
-  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>([]);
+  const [isStudentDialogOpen, setIsStudentDialogOpen] = useState(false);
+  const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
+  const [isStaffDialogOpen, setIsStaffDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    rollNumber: "",
-    class: "",
-    department: ""
-  });
+  const [studentForm, setStudentForm] = useState({ name: "", rollNumber: "", email: "", department: "", courseCode: "" });
+  const [deptForm, setDeptForm] = useState({ name: "", code: "" });
+  const [staffForm, setStaffForm] = useState({ name: "", email: "", department: "" });
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -39,7 +68,14 @@ const Admin1Dashboard = () => {
     }
 
     const savedStudents = JSON.parse(localStorage.getItem("students") || "[]");
+    const savedDepartments = JSON.parse(localStorage.getItem("departments") || "[]");
+    const savedStaff = JSON.parse(localStorage.getItem("staff") || "[]");
+    const savedRequests = JSON.parse(localStorage.getItem("changeRequests") || "[]");
+    
     setStudents(savedStudents);
+    setDepartments(savedDepartments);
+    setStaff(savedStaff);
+    setChangeRequests(savedRequests);
   }, [navigate]);
 
   const handleLogout = () => {
@@ -47,67 +83,139 @@ const Admin1Dashboard = () => {
     navigate("/auth");
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      email: "",
-      rollNumber: "",
-      class: "",
-      department: ""
-    });
-  };
-
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAddDepartment = (e: React.FormEvent) => {
     e.preventDefault();
-    const newStudent: Student = {
+    const newDept: Department = {
       id: Date.now().toString(),
-      ...formData
+      ...deptForm
     };
-    const updatedStudents = [...students, newStudent];
-    setStudents(updatedStudents);
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
-    toast.success("Student added successfully");
-    setIsAddOpen(false);
-    resetForm();
+    const updatedDepts = [...departments, newDept];
+    setDepartments(updatedDepts);
+    localStorage.setItem("departments", JSON.stringify(updatedDepts));
+    toast.success("Department added successfully");
+    setDeptForm({ name: "", code: "" });
+    setIsDeptDialogOpen(false);
   };
 
-  const handleEdit = (e: React.FormEvent) => {
+  const handleDeleteDepartment = (id: string) => {
+    const updatedDepts = departments.filter(d => d.id !== id);
+    setDepartments(updatedDepts);
+    localStorage.setItem("departments", JSON.stringify(updatedDepts));
+    toast.success("Department deleted");
+  };
+
+  const handleAddStaff = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingStudent) return;
-    
-    const updatedStudents = students.map(s => 
-      s.id === editingStudent.id ? { ...editingStudent, ...formData } : s
-    );
-    setStudents(updatedStudents);
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
-    toast.success("Student updated successfully");
-    setEditingStudent(null);
-    resetForm();
+    const newStaff: Staff = {
+      id: Date.now().toString(),
+      ...staffForm
+    };
+    const updatedStaff = [...staff, newStaff];
+    setStaff(updatedStaff);
+    localStorage.setItem("staff", JSON.stringify(updatedStaff));
+    toast.success("Staff added successfully");
+    setStaffForm({ name: "", email: "", department: "" });
+    setIsStaffDialogOpen(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDeleteStaff = (id: string) => {
+    const updatedStaff = staff.filter(s => s.id !== id);
+    setStaff(updatedStaff);
+    localStorage.setItem("staff", JSON.stringify(updatedStaff));
+    toast.success("Staff deleted");
+  };
+
+  const handleStudentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (editingStudent) {
+      const updatedStudents = students.map(s => 
+        s.id === editingStudent.id ? { ...editingStudent, ...studentForm } : s
+      );
+      setStudents(updatedStudents);
+      localStorage.setItem("students", JSON.stringify(updatedStudents));
+      toast.success("Student updated successfully");
+    } else {
+      const newStudent: Student = {
+        id: Date.now().toString(),
+        ...studentForm
+      };
+      const updatedStudents = [...students, newStudent];
+      setStudents(updatedStudents);
+      localStorage.setItem("students", JSON.stringify(updatedStudents));
+      toast.success("Student added successfully");
+    }
+    
+    resetStudentForm();
+  };
+
+  const handleEditStudent = (student: Student) => {
+    setEditingStudent(student);
+    setStudentForm({
+      name: student.name,
+      rollNumber: student.rollNumber,
+      email: student.email,
+      department: student.department,
+      courseCode: student.courseCode
+    });
+    setIsStudentDialogOpen(true);
+  };
+
+  const handleDeleteStudent = (id: string) => {
     const updatedStudents = students.filter(s => s.id !== id);
     setStudents(updatedStudents);
     localStorage.setItem("students", JSON.stringify(updatedStudents));
     toast.success("Student deleted successfully");
   };
 
-  const openEditDialog = (student: Student) => {
-    setEditingStudent(student);
-    setFormData({
-      name: student.name,
-      email: student.email,
-      rollNumber: student.rollNumber,
-      class: student.class,
-      department: student.department
-    });
+  const resetStudentForm = () => {
+    setStudentForm({ name: "", rollNumber: "", email: "", department: "", courseCode: "" });
+    setEditingStudent(null);
+    setIsStudentDialogOpen(false);
   };
+
+  const handleApproveRequest = (requestId: string) => {
+    const request = changeRequests.find(r => r.id === requestId);
+    if (!request || !request.verifiedByAdmin2) {
+      toast.error("Request must be verified by Admin 2 first");
+      return;
+    }
+
+    const updatedStudents = students.map(s => {
+      if (s.id === request.studentId) {
+        return { ...s, [request.field]: request.newValue };
+      }
+      return s;
+    });
+
+    setStudents(updatedStudents);
+    localStorage.setItem("students", JSON.stringify(updatedStudents));
+
+    const updatedRequests = changeRequests.map(r =>
+      r.id === requestId ? { ...r, status: "approved" } : r
+    );
+    setChangeRequests(updatedRequests);
+    localStorage.setItem("changeRequests", JSON.stringify(updatedRequests));
+    
+    toast.success("Request approved and changes applied");
+  };
+
+  const handleRejectRequest = (requestId: string) => {
+    const updatedRequests = changeRequests.map(r =>
+      r.id === requestId ? { ...r, status: "rejected" } : r
+    );
+    setChangeRequests(updatedRequests);
+    localStorage.setItem("changeRequests", JSON.stringify(updatedRequests));
+    toast.success("Request rejected");
+  };
+
+  const verifiedPendingRequests = changeRequests.filter(r => r.status === "pending" && r.verifiedByAdmin2);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Admin 1 Dashboard</h1>
+          <h1 className="text-2xl font-bold">Admin 1 Dashboard - NPV College</h1>
           <Button variant="outline" onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Logout
@@ -116,122 +224,299 @@ const Admin1Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Student Management</CardTitle>
-                <CardDescription>Add, edit, and delete student records</CardDescription>
-              </div>
-              <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => resetForm()}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Student
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Student</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleAdd} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Name</Label>
-                      <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Email</Label>
-                      <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Roll Number</Label>
-                      <Input value={formData.rollNumber} onChange={(e) => setFormData({...formData, rollNumber: e.target.value})} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Class</Label>
-                      <Input value={formData.class} onChange={(e) => setFormData({...formData, class: e.target.value})} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Department</Label>
-                      <Input value={formData.department} onChange={(e) => setFormData({...formData, department: e.target.value})} required />
-                    </div>
-                    <Button type="submit" className="w-full">Add Student</Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Roll Number</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell>{student.rollNumber}</TableCell>
-                    <TableCell>{student.name}</TableCell>
-                    <TableCell>{student.email}</TableCell>
-                    <TableCell>{student.class}</TableCell>
-                    <TableCell>{student.department}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Dialog open={editingStudent?.id === student.id} onOpenChange={(open) => !open && setEditingStudent(null)}>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="icon" onClick={() => openEditDialog(student)}>
+        <Tabs defaultValue="students">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="departments">Departments</TabsTrigger>
+            <TabsTrigger value="staff">Staff</TabsTrigger>
+            <TabsTrigger value="requests">
+              Requests
+              {verifiedPendingRequests.length > 0 && (
+                <Badge variant="destructive" className="ml-2">{verifiedPendingRequests.length}</Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="students">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Student Management</CardTitle>
+                    <CardDescription>Add, edit, and manage student records</CardDescription>
+                  </div>
+                  <Dialog open={isStudentDialogOpen} onOpenChange={setIsStudentDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button onClick={resetStudentForm}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Student
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{editingStudent ? "Edit Student" : "Add New Student"}</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleStudentSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Name</Label>
+                          <Input value={studentForm.name} onChange={(e) => setStudentForm({...studentForm, name: e.target.value})} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Roll Number</Label>
+                          <Input value={studentForm.rollNumber} onChange={(e) => setStudentForm({...studentForm, rollNumber: e.target.value})} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Email</Label>
+                          <Input type="email" value={studentForm.email} onChange={(e) => setStudentForm({...studentForm, email: e.target.value})} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Department</Label>
+                          <Select value={studentForm.department} onValueChange={(v) => setStudentForm({...studentForm, department: v})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select department" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {departments.map(dept => (
+                                <SelectItem key={dept.id} value={dept.code}>{dept.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Course Code</Label>
+                          <Input value={studentForm.courseCode} onChange={(e) => setStudentForm({...studentForm, courseCode: e.target.value})} required />
+                        </div>
+                        <Button type="submit" className="w-full">
+                          {editingStudent ? "Update" : "Add"} Student
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Roll Number</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Course Code</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {students.map(student => (
+                      <TableRow key={student.id}>
+                        <TableCell>{student.name}</TableCell>
+                        <TableCell>{student.rollNumber}</TableCell>
+                        <TableCell>{student.email}</TableCell>
+                        <TableCell>{student.department}</TableCell>
+                        <TableCell>{student.courseCode}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => handleEditStudent(student)}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Edit Student</DialogTitle>
-                            </DialogHeader>
-                            <form onSubmit={handleEdit} className="space-y-4">
-                              <div className="space-y-2">
-                                <Label>Name</Label>
-                                <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Email</Label>
-                                <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} required />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Roll Number</Label>
-                                <Input value={formData.rollNumber} onChange={(e) => setFormData({...formData, rollNumber: e.target.value})} required />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Class</Label>
-                                <Input value={formData.class} onChange={(e) => setFormData({...formData, class: e.target.value})} required />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Department</Label>
-                                <Input value={formData.department} onChange={(e) => setFormData({...formData, department: e.target.value})} required />
-                              </div>
-                              <Button type="submit" className="w-full">Update Student</Button>
-                            </form>
-                          </DialogContent>
-                        </Dialog>
-                        <Button variant="destructive" size="icon" onClick={() => handleDelete(student.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteStudent(student.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="departments">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Department Management</CardTitle>
+                    <CardDescription>Add and manage departments</CardDescription>
+                  </div>
+                  <Dialog open={isDeptDialogOpen} onOpenChange={setIsDeptDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Department
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Department</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleAddDepartment} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Department Name</Label>
+                          <Input value={deptForm.name} onChange={(e) => setDeptForm({...deptForm, name: e.target.value})} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Department Code</Label>
+                          <Input value={deptForm.code} onChange={(e) => setDeptForm({...deptForm, code: e.target.value})} required />
+                        </div>
+                        <Button type="submit" className="w-full">Add Department</Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Department Name</TableHead>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {departments.map(dept => (
+                      <TableRow key={dept.id}>
+                        <TableCell>{dept.name}</TableCell>
+                        <TableCell>{dept.code}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="destructive" onClick={() => handleDeleteDepartment(dept.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="staff">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Staff Management</CardTitle>
+                    <CardDescription>Add staff and assign to departments</CardDescription>
+                  </div>
+                  <Dialog open={isStaffDialogOpen} onOpenChange={setIsStaffDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Staff
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Staff</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleAddStaff} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Name</Label>
+                          <Input value={staffForm.name} onChange={(e) => setStaffForm({...staffForm, name: e.target.value})} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Email</Label>
+                          <Input type="email" value={staffForm.email} onChange={(e) => setStaffForm({...staffForm, email: e.target.value})} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Assigned Department</Label>
+                          <Select value={staffForm.department} onValueChange={(v) => setStaffForm({...staffForm, department: v})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select department" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {departments.map(dept => (
+                                <SelectItem key={dept.id} value={dept.code}>{dept.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button type="submit" className="w-full">Add Staff</Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {staff.map(s => (
+                      <TableRow key={s.id}>
+                        <TableCell>{s.name}</TableCell>
+                        <TableCell>{s.email}</TableCell>
+                        <TableCell>{s.department}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="destructive" onClick={() => handleDeleteStaff(s.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="requests">
+            <Card>
+              <CardHeader>
+                <CardTitle>Verified Change Requests</CardTitle>
+                <CardDescription>Approve or reject requests verified by Admin 2</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {verifiedPendingRequests.map(request => (
+                  <Card key={request.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold">{request.studentName}</p>
+                            <Badge variant="secondary">Verified by Admin 2</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">Roll No: {request.rollNumber}</p>
+                          <p className="text-sm">
+                            <span className="font-medium">Field:</span> {request.field}
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-medium">Current:</span> {request.currentValue}
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-medium">New Value:</span> {request.newValue}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleApproveRequest(request.id)}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Approve
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleRejectRequest(request.id)}>
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Reject
+                          </Button>
+                        </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </CardContent>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
-            {students.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">No students found. Add your first student!</p>
-            )}
-          </CardContent>
-        </Card>
+                {verifiedPendingRequests.length === 0 && (
+                  <p className="text-center text-muted-foreground py-8">No verified pending requests</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

@@ -14,26 +14,28 @@ interface Student {
   name: string;
   email: string;
   rollNumber: string;
-  class: string;
   department: string;
+  courseCode: string;
 }
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
-  const [isRequestOpen, setIsRequestOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState("");
-  const [field, setField] = useState("");
-  const [newValue, setNewValue] = useState("");
+  const [currentUser, setCurrentUser] = useState<any>({});
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [requestType, setRequestType] = useState<"staff" | "admin2">("admin2");
+  const [field, setField] = useState("");
+  const [currentValue, setCurrentValue] = useState("");
+  const [newValue, setNewValue] = useState("");
 
   useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    if (currentUser.role !== "student") {
+    const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    if (user.role !== "student") {
       navigate("/auth");
       return;
     }
 
+    setCurrentUser(user);
     const savedStudents = JSON.parse(localStorage.getItem("students") || "[]");
     setStudents(savedStudents);
   }, [navigate]);
@@ -43,42 +45,50 @@ const StudentDashboard = () => {
     navigate("/auth");
   };
 
+  const resetForm = () => {
+    setField("");
+    setCurrentValue("");
+    setNewValue("");
+  };
+
   const handleSubmitRequest = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const student = students.find(s => s.id === selectedStudent);
+    const student = students.find(s => s.id === currentUser.id);
     if (!student) return;
 
-    const storageKey = requestType === "staff" ? "staffRequests" : "changeRequests";
-    const requests = JSON.parse(localStorage.getItem(storageKey) || "[]");
-    
     const newRequest = {
       id: Date.now().toString(),
       studentId: student.id,
       studentName: student.name,
       rollNumber: student.rollNumber,
       field,
+      currentValue,
       newValue,
       status: "pending",
-      requestType
+      verifiedByAdmin2: false
     };
-    
-    requests.push(newRequest);
-    localStorage.setItem(storageKey, JSON.stringify(requests));
-    
-    toast.success(`Request submitted to ${requestType === "staff" ? "Staff" : "Admin2"}`);
-    setIsRequestOpen(false);
-    setSelectedStudent("");
-    setField("");
-    setNewValue("");
-    setRequestType("admin2");
+
+    if (requestType === "staff") {
+      const staffRequests = JSON.parse(localStorage.getItem("staffRequests") || "[]");
+      staffRequests.push(newRequest);
+      localStorage.setItem("staffRequests", JSON.stringify(staffRequests));
+    } else {
+      const changeRequests = JSON.parse(localStorage.getItem("changeRequests") || "[]");
+      changeRequests.push(newRequest);
+      localStorage.setItem("changeRequests", JSON.stringify(changeRequests));
+    }
+
+    toast.success(`Request submitted to ${requestType === "staff" ? "Staff" : "Admin 2"}`);
+    setIsDialogOpen(false);
+    resetForm();
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Student Dashboard</h1>
+          <h1 className="text-2xl font-bold">Student Dashboard - NPV College</h1>
           <Button variant="outline" onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Logout
@@ -94,9 +104,9 @@ const StudentDashboard = () => {
                 <CardTitle>Student Records</CardTitle>
                 <CardDescription>View all student data and request changes</CardDescription>
               </div>
-              <Dialog open={isRequestOpen} onOpenChange={setIsRequestOpen}>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button onClick={resetForm}>
                     <FileEdit className="mr-2 h-4 w-4" />
                     Request Change
                   </Button>
@@ -108,31 +118,16 @@ const StudentDashboard = () => {
                   <form onSubmit={handleSubmitRequest} className="space-y-4">
                     <div className="space-y-2">
                       <Label>Request Type</Label>
-                      <Select value={requestType} onValueChange={(value: "staff" | "admin2") => {
-                        setRequestType(value);
+                      <Select value={requestType} onValueChange={(v: "staff" | "admin2") => {
+                        setRequestType(v);
                         setField("");
                       }}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="admin2">Admin2 (General Data)</SelectItem>
+                          <SelectItem value="admin2">Admin 2 (General Data)</SelectItem>
                           <SelectItem value="staff">Staff (Marks/Attendance)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Select Student</Label>
-                      <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose student" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {students.map(student => (
-                            <SelectItem key={student.id} value={student.id}>
-                              {student.name} ({student.rollNumber})
-                            </SelectItem>
-                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -152,20 +147,20 @@ const StudentDashboard = () => {
                             <>
                               <SelectItem value="name">Name</SelectItem>
                               <SelectItem value="email">Email</SelectItem>
-                              <SelectItem value="class">Class</SelectItem>
                               <SelectItem value="department">Department</SelectItem>
+                              <SelectItem value="courseCode">Course Code</SelectItem>
                             </>
                           )}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
+                      <Label>Current Value</Label>
+                      <Input value={currentValue} onChange={(e) => setCurrentValue(e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
                       <Label>New Value</Label>
-                      <Input 
-                        value={newValue} 
-                        onChange={(e) => setNewValue(e.target.value)} 
-                        required 
-                      />
+                      <Input value={newValue} onChange={(e) => setNewValue(e.target.value)} required />
                     </div>
                     <Button type="submit" className="w-full">Submit Request</Button>
                   </form>
@@ -185,10 +180,10 @@ const StudentDashboard = () => {
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <span className="text-muted-foreground">Email:</span>
                       <span>{student.email}</span>
-                      <span className="text-muted-foreground">Class:</span>
-                      <span>{student.class}</span>
                       <span className="text-muted-foreground">Department:</span>
                       <span>{student.department}</span>
+                      <span className="text-muted-foreground">Course Code:</span>
+                      <span>{student.courseCode}</span>
                     </div>
                   </CardContent>
                 </Card>
