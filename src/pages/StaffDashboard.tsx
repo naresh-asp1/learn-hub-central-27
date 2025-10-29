@@ -19,6 +19,10 @@ interface Student {
   rollNumber: string;
   department: string;
   courseCode: string;
+  totalFees?: number;
+  feesPaid?: number;
+  feesBalance?: number;
+  paymentStatus?: string;
 }
 
 interface AttendanceRecord {
@@ -521,6 +525,30 @@ const StaffDashboard = () => {
                                 </div>
                               </div>
                             )}
+
+                            <div className="border-t pt-4">
+                              <h4 className="font-semibold mb-3">Fees Information</h4>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Total Fees</p>
+                                  <p className="text-lg font-bold">₹{student.totalFees?.toLocaleString() || 0}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Fees Paid</p>
+                                  <p className="text-lg font-bold text-green-600">₹{student.feesPaid?.toLocaleString() || 0}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Balance</p>
+                                  <p className="text-lg font-bold text-red-600">₹{student.feesBalance?.toLocaleString() || 0}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Status</p>
+                                  <Badge variant={student.paymentStatus === "Paid" ? "default" : "destructive"}>
+                                    {student.paymentStatus || "Pending"}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
                           </CardContent>
                         </Card>
                       );

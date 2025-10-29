@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { LogOut, FileEdit } from "lucide-react";
 
@@ -16,6 +17,10 @@ interface Student {
   rollNumber: string;
   department: string;
   courseCode: string;
+  totalFees?: number;
+  feesPaid?: number;
+  feesBalance?: number;
+  paymentStatus?: string;
 }
 
 const StudentDashboard = () => {
@@ -184,6 +189,18 @@ const StudentDashboard = () => {
                       <span>{student.department}</span>
                       <span className="text-muted-foreground">Course Code:</span>
                       <span>{student.courseCode}</span>
+                      <span className="text-muted-foreground">Total Fees:</span>
+                      <span>₹{student.totalFees?.toLocaleString() || 0}</span>
+                      <span className="text-muted-foreground">Fees Paid:</span>
+                      <span className="text-green-600 font-medium">₹{student.feesPaid?.toLocaleString() || 0}</span>
+                      <span className="text-muted-foreground">Balance Due:</span>
+                      <span className="text-red-600 font-medium">₹{student.feesBalance?.toLocaleString() || 0}</span>
+                      <span className="text-muted-foreground">Payment Status:</span>
+                      <span>
+                        <Badge variant={student.paymentStatus === "Paid" ? "default" : "destructive"}>
+                          {student.paymentStatus || "Pending"}
+                        </Badge>
+                      </span>
                     </div>
                   </CardContent>
                 </Card>

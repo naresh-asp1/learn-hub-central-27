@@ -14,6 +14,10 @@ interface Student {
   email: string;
   department: string;
   courseCode: string;
+  totalFees?: number;
+  feesPaid?: number;
+  feesBalance?: number;
+  paymentStatus?: string;
 }
 
 interface ChangeRequest {
@@ -73,7 +77,7 @@ const Admin2Dashboard = () => {
     const records = JSON.parse(localStorage.getItem("studentRecords") || "[]");
     
     const csvContent = [
-      ["Student Name", "Roll Number", "Department", "Course Code", "Marks", "Attendance", "Performance"],
+      ["Student Name", "Roll Number", "Department", "Course Code", "Marks", "Attendance", "Performance", "Total Fees", "Fees Paid", "Balance", "Payment Status"],
       ...students.map(student => {
         const record = records.find((r: any) => r.studentId === student.id);
         const marks = record?.marks ? Object.entries(record.marks).map(([subj, mark]) => `${subj}:${mark}`).join("; ") : "N/A";
@@ -87,7 +91,11 @@ const Admin2Dashboard = () => {
           student.courseCode,
           marks,
           attendance,
-          performance
+          performance,
+          student.totalFees || 0,
+          student.feesPaid || 0,
+          student.feesBalance || 0,
+          student.paymentStatus || "Pending"
         ];
       })
     ].map(row => row.join(",")).join("\n");

@@ -19,6 +19,11 @@ interface Student {
   email: string;
   department: string;
   courseCode: string;
+  totalFees: number;
+  feesPaid: number;
+  feesBalance: number;
+  paymentStatus: string;
+  parentId?: string;
 }
 
 interface Department {
@@ -56,7 +61,18 @@ const Admin1Dashboard = () => {
   const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
   const [isStaffDialogOpen, setIsStaffDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [studentForm, setStudentForm] = useState({ name: "", rollNumber: "", email: "", department: "", courseCode: "" });
+  const [studentForm, setStudentForm] = useState({ 
+    name: "", 
+    rollNumber: "", 
+    email: "", 
+    department: "", 
+    courseCode: "", 
+    totalFees: 0, 
+    feesPaid: 0, 
+    feesBalance: 0, 
+    paymentStatus: "Pending",
+    parentId: ""
+  });
   const [deptForm, setDeptForm] = useState({ name: "", code: "" });
   const [staffForm, setStaffForm] = useState({ name: "", email: "", department: "" });
 
@@ -156,7 +172,12 @@ const Admin1Dashboard = () => {
       rollNumber: student.rollNumber,
       email: student.email,
       department: student.department,
-      courseCode: student.courseCode
+      courseCode: student.courseCode,
+      totalFees: student.totalFees || 0,
+      feesPaid: student.feesPaid || 0,
+      feesBalance: student.feesBalance || 0,
+      paymentStatus: student.paymentStatus || "Pending",
+      parentId: student.parentId || ""
     });
     setIsStudentDialogOpen(true);
   };
@@ -169,7 +190,18 @@ const Admin1Dashboard = () => {
   };
 
   const resetStudentForm = () => {
-    setStudentForm({ name: "", rollNumber: "", email: "", department: "", courseCode: "" });
+    setStudentForm({ 
+      name: "", 
+      rollNumber: "", 
+      email: "", 
+      department: "", 
+      courseCode: "", 
+      totalFees: 0, 
+      feesPaid: 0, 
+      feesBalance: 0, 
+      paymentStatus: "Pending",
+      parentId: ""
+    });
     setEditingStudent(null);
     setIsStudentDialogOpen(false);
   };
@@ -286,6 +318,27 @@ const Admin1Dashboard = () => {
                           <Label>Course Code</Label>
                           <Input value={studentForm.courseCode} onChange={(e) => setStudentForm({...studentForm, courseCode: e.target.value})} required />
                         </div>
+                        <div className="space-y-2">
+                          <Label>Total Fees (₹)</Label>
+                          <Input type="number" value={studentForm.totalFees} onChange={(e) => {
+                            const total = Number(e.target.value);
+                            const balance = total - studentForm.feesPaid;
+                            setStudentForm({...studentForm, totalFees: total, feesBalance: balance});
+                          }} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Fees Paid (₹)</Label>
+                          <Input type="number" value={studentForm.feesPaid} onChange={(e) => {
+                            const paid = Number(e.target.value);
+                            const balance = studentForm.totalFees - paid;
+                            const status = balance <= 0 ? "Paid" : "Pending";
+                            setStudentForm({...studentForm, feesPaid: paid, feesBalance: balance, paymentStatus: status});
+                          }} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Parent ID (Optional)</Label>
+                          <Input value={studentForm.parentId} onChange={(e) => setStudentForm({...studentForm, parentId: e.target.value})} placeholder="Link to parent account" />
+                        </div>
                         <Button type="submit" className="w-full">
                           {editingStudent ? "Update" : "Add"} Student
                         </Button>
@@ -303,6 +356,7 @@ const Admin1Dashboard = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Department</TableHead>
                       <TableHead>Course Code</TableHead>
+                      <TableHead>Fees Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -314,6 +368,11 @@ const Admin1Dashboard = () => {
                         <TableCell>{student.email}</TableCell>
                         <TableCell>{student.department}</TableCell>
                         <TableCell>{student.courseCode}</TableCell>
+                        <TableCell>
+                          <Badge variant={student.paymentStatus === "Paid" ? "default" : "destructive"}>
+                            {student.paymentStatus || "Pending"} (₹{student.feesBalance || 0})
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             <Button size="sm" variant="outline" onClick={() => handleEditStudent(student)}>
