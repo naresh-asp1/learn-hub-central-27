@@ -25,9 +25,6 @@ const Index = () => {
           </div>
           <div>
             <CardTitle className="text-4xl font-bold">NPV College</CardTitle>
-            <CardDescription className="text-base mt-3">
-              Student Management System
-            </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
