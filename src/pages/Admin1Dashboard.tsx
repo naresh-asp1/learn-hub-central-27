@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -101,6 +101,7 @@ const Admin1Dashboard = () => {
 
   const handleAddDepartment = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("handleAddDepartment invoked", deptForm);
     const newDept: Department = {
       id: Date.now().toString(),
       ...deptForm
@@ -122,6 +123,7 @@ const Admin1Dashboard = () => {
 
   const handleAddStaff = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("handleAddStaff invoked", staffForm);
     
     if (!staffForm.department) {
       toast.error("Please select a department");
@@ -149,6 +151,7 @@ const Admin1Dashboard = () => {
 
   const handleStudentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("handleStudentSubmit invoked", { editing: !!editingStudent, studentForm });
     
     if (!studentForm.department) {
       toast.error("Please select a department");
@@ -296,9 +299,10 @@ const Admin1Dashboard = () => {
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>{editingStudent ? "Edit Student" : "Add New Student"}</DialogTitle>
-                      </DialogHeader>
+                        <DialogHeader>
+                          <DialogTitle>{editingStudent ? "Edit Student" : "Add New Student"}</DialogTitle>
+                          <DialogDescription>Fill in the student details and save your changes.</DialogDescription>
+                        </DialogHeader>
                       <form onSubmit={handleStudentSubmit} className="space-y-4">
                         <div className="space-y-2">
                           <Label>Name</Label>
@@ -420,6 +424,7 @@ const Admin1Dashboard = () => {
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Add New Department</DialogTitle>
+                        <DialogDescription>Create a department by providing its name and code.</DialogDescription>
                       </DialogHeader>
                       <form onSubmit={handleAddDepartment} className="space-y-4">
                         <div className="space-y-2">
@@ -481,6 +486,7 @@ const Admin1Dashboard = () => {
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Add New Staff</DialogTitle>
+                        <DialogDescription>Enter staff details and assign a department.</DialogDescription>
                       </DialogHeader>
                       <form onSubmit={handleAddStaff} className="space-y-4">
                         <div className="space-y-2">
