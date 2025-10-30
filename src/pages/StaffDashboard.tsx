@@ -235,8 +235,8 @@ const StaffDashboard = () => {
   };
 
   const filteredStudents = students.filter(s => 
-    (!selectedCourseCode || s.courseCode === selectedCourseCode) &&
-    (!selectedDepartment || s.department === selectedDepartment)
+    (!selectedCourseCode || selectedCourseCode === "all" || s.courseCode === selectedCourseCode) &&
+    (!selectedDepartment || selectedDepartment === "all" || s.department === selectedDepartment)
   );
 
   const uniqueCourseCodes = [...new Set(students.map(s => s.courseCode))];
@@ -288,7 +288,7 @@ const StaffDashboard = () => {
                         <SelectValue placeholder="All courses" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All courses</SelectItem>
+                        <SelectItem value="all">All courses</SelectItem>
                         {uniqueCourseCodes.map(code => (
                           <SelectItem key={code} value={code}>{code}</SelectItem>
                         ))}
@@ -302,7 +302,7 @@ const StaffDashboard = () => {
                         <SelectValue placeholder="All departments" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All departments</SelectItem>
+                        <SelectItem value="all">All departments</SelectItem>
                         {uniqueDepartments.map(dept => (
                           <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                         ))}
