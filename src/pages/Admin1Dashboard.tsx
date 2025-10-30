@@ -122,6 +122,12 @@ const Admin1Dashboard = () => {
 
   const handleAddStaff = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!staffForm.department) {
+      toast.error("Please select a department");
+      return;
+    }
+    
     const newStaff: Staff = {
       id: Date.now().toString(),
       ...staffForm
@@ -143,6 +149,11 @@ const Admin1Dashboard = () => {
 
   const handleStudentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!studentForm.department) {
+      toast.error("Please select a department");
+      return;
+    }
     
     if (editingStudent) {
       const updatedStudents = students.map(s => 
@@ -302,8 +313,8 @@ const Admin1Dashboard = () => {
                           <Input type="email" value={studentForm.email} onChange={(e) => setStudentForm({...studentForm, email: e.target.value})} required />
                         </div>
                         <div className="space-y-2">
-                          <Label>Department</Label>
-                          <Select value={studentForm.department} onValueChange={(v) => setStudentForm({...studentForm, department: v})}>
+                          <Label>Department *</Label>
+                          <Select value={studentForm.department} onValueChange={(v) => setStudentForm({...studentForm, department: v})} required>
                             <SelectTrigger>
                               <SelectValue placeholder="Select department" />
                             </SelectTrigger>
@@ -481,8 +492,8 @@ const Admin1Dashboard = () => {
                           <Input type="email" value={staffForm.email} onChange={(e) => setStaffForm({...staffForm, email: e.target.value})} required />
                         </div>
                         <div className="space-y-2">
-                          <Label>Assigned Department</Label>
-                          <Select value={staffForm.department} onValueChange={(v) => setStaffForm({...staffForm, department: v})}>
+                          <Label>Assigned Department *</Label>
+                          <Select value={staffForm.department} onValueChange={(v) => setStaffForm({...staffForm, department: v})} required>
                             <SelectTrigger>
                               <SelectValue placeholder="Select department" />
                             </SelectTrigger>
