@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { LogOut, Plus, CheckCircle, XCircle } from "lucide-react";
+import { MarksEntry } from "@/components/MarksEntry";
+import { PerformanceReport } from "@/components/PerformanceReport";
 
 interface Student {
   id: string;
@@ -263,10 +265,11 @@ const StaffDashboard = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="attendance">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="attendance">Daily Attendance</TabsTrigger>
-                <TabsTrigger value="marks">Marks</TabsTrigger>
-                <TabsTrigger value="reports">Generate Report</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="attendance">Attendance</TabsTrigger>
+                <TabsTrigger value="marks-entry">Marks Entry</TabsTrigger>
+                <TabsTrigger value="performance">Performance Reports</TabsTrigger>
+                <TabsTrigger value="marks">Old Marks</TabsTrigger>
                 <TabsTrigger value="requests">
                   Requests
                   {pendingRequests.length > 0 && (
@@ -355,6 +358,14 @@ const StaffDashboard = () => {
                     })}
                   </TableBody>
                 </Table>
+              </TabsContent>
+
+              <TabsContent value="marks-entry">
+                <MarksEntry />
+              </TabsContent>
+
+              <TabsContent value="performance">
+                <PerformanceReport />
               </TabsContent>
               
               <TabsContent value="marks" className="space-y-4">

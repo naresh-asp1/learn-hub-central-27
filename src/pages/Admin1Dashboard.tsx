@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle } from "lucide-react";
 import { SampleDataInitializer } from "@/components/SampleDataInitializer";
+import { SubjectManagement } from "@/components/SubjectManagement";
+import { MarksEntry } from "@/components/MarksEntry";
+import { PerformanceReport } from "@/components/PerformanceReport";
 
 interface Student {
   id: string;
@@ -271,11 +274,14 @@ const Admin1Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="students">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs defaultValue="students" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="staff">Staff</TabsTrigger>
+            <TabsTrigger value="subjects">Subjects</TabsTrigger>
+            <TabsTrigger value="marks">Marks Entry</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="requests">
               Requests
               {verifiedPendingRequests.length > 0 && (
@@ -593,6 +599,18 @@ const Admin1Dashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="subjects">
+            <SubjectManagement />
+          </TabsContent>
+
+          <TabsContent value="marks">
+            <MarksEntry />
+          </TabsContent>
+
+          <TabsContent value="performance">
+            <PerformanceReport />
           </TabsContent>
 
           <TabsContent value="sample-data">
