@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { SampleDataInitializer } from "@/components/SampleDataInitializer";
 
 interface Student {
   id: string;
@@ -271,7 +272,7 @@ const Admin1Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="students">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="staff">Staff</TabsTrigger>
@@ -281,6 +282,7 @@ const Admin1Dashboard = () => {
                 <Badge variant="destructive" className="ml-2">{verifiedPendingRequests.length}</Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="sample-data">Sample Data</TabsTrigger>
           </TabsList>
 
           <TabsContent value="students">
@@ -591,6 +593,10 @@ const Admin1Dashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="sample-data">
+            <SampleDataInitializer />
           </TabsContent>
         </Tabs>
       </main>
