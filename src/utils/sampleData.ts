@@ -29,9 +29,9 @@ export const initializeSampleData = () => {
   let studentIdCounter = 1000;
 
   departments.forEach((dept, deptIndex) => {
-    for (let i = 1; i <= 10; i++) {
-      const firstName = firstNames[(deptIndex * 10 + i - 1) % firstNames.length];
-      const lastName = lastNames[(deptIndex * 10 + i - 1) % lastNames.length];
+    for (let i = 1; i <= 20; i++) {
+      const firstName = firstNames[(deptIndex * 20 + i - 1) % firstNames.length];
+      const lastName = lastNames[(deptIndex * 20 + i - 1) % lastNames.length];
       const name = `${firstName} ${lastName}`;
       const rollNumber = `${dept.code}${String(i).padStart(3, '0')}`;
       const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@student.npv.edu`;
@@ -75,10 +75,10 @@ export const initializeSampleData = () => {
   let staffIdCounter = 2000;
 
   departments.forEach((dept, deptIndex) => {
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 3; i++) {
       const title = staffTitles[i % staffTitles.length];
-      const firstName = staffFirstNames[(deptIndex * 5 + i - 1) % staffFirstNames.length];
-      const lastName = staffLastNames[(deptIndex * 5 + i - 1) % staffLastNames.length];
+      const firstName = staffFirstNames[(deptIndex * 3 + i - 1) % staffFirstNames.length];
+      const lastName = staffLastNames[(deptIndex * 3 + i - 1) % staffLastNames.length];
       const name = `${title} ${firstName} ${lastName}`;
       const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${deptIndex + 1}@staff.npv.edu`;
       const password = `staff${dept.code}${i}`;
