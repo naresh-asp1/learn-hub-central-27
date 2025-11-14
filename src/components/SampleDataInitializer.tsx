@@ -40,34 +40,22 @@ export const SampleDataInitializer = () => {
       text += "-".repeat(80) + "\n";
     });
 
-    text += "\n\nSTUDENT ACCOUNTS (80 Total):\n";
+    text += `\n\nSTUDENT ACCOUNTS (${credentials.students.length} Total):\n`;
     text += "=".repeat(80) + "\n";
-    
-    const departments = ["MCA", "BE-CSE", "BE-IT", "BE-BME", "BE-MECH", "BE-CIVIL", "BE-EEE", "BE-ECE"];
-    departments.forEach(dept => {
-      const deptStudents = credentials.students.filter((s: any) => s.email.includes(dept.toLowerCase()));
-      text += `\n${dept} DEPARTMENT (${deptStudents.length} students):\n`;
-      text += "-".repeat(80) + "\n";
-      deptStudents.forEach((student: any) => {
-        text += `Name: ${student.name}\n`;
-        text += `Email: ${student.email}\n`;
-        text += `Password: ${student.password}\n`;
-        text += "\n";
-      });
+    credentials.students.forEach((student: any) => {
+      text += `Name: ${student.name}\n`;
+      text += `Email: ${student.email}\n`;
+      text += `Password: ${student.password}\n`;
+      text += "\n";
     });
 
-    text += "\n\nSTAFF ACCOUNTS (40 Total):\n";
+    text += `\n\nSTAFF ACCOUNTS (${credentials.staff.length} Total):\n`;
     text += "=".repeat(80) + "\n";
-    departments.forEach(dept => {
-      const deptStaff = credentials.staff.filter((s: any) => s.email.includes(dept.toLowerCase()));
-      text += `\n${dept} DEPARTMENT (${deptStaff.length} staff):\n`;
-      text += "-".repeat(80) + "\n";
-      deptStaff.forEach((staff: any) => {
-        text += `Name: ${staff.name}\n`;
-        text += `Email: ${staff.email}\n`;
-        text += `Password: ${staff.password}\n`;
-        text += "\n";
-      });
+    credentials.staff.forEach((staff: any) => {
+      text += `Name: ${staff.name}\n`;
+      text += `Email: ${staff.email}\n`;
+      text += `Password: ${staff.password}\n`;
+      text += "\n";
     });
 
     const blob = new Blob([text], { type: "text/plain" });
@@ -90,7 +78,7 @@ export const SampleDataInitializer = () => {
           <CardTitle>Initialize Sample Data</CardTitle>
           <CardDescription>
             This will clear all existing data and load sample data including 8 departments,
-            80 students (10 per department), and 40 staff (5 per department)
+            160 students (20 per department), and 24 staff (3 per department)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -153,33 +141,21 @@ export const SampleDataInitializer = () => {
                     <h3 className="text-lg font-semibold">Student Accounts</h3>
                     <Badge>{credentials.students.length}</Badge>
                   </div>
-                  <div className="space-y-4">
-                    {["MCA", "BE-CSE", "BE-IT", "BE-BME", "BE-MECH", "BE-CIVIL", "BE-EEE", "BE-ECE"].map(dept => {
-                      const deptStudents = credentials.students.filter((s: any) => 
-                        s.email.toLowerCase().includes(dept.toLowerCase().replace("-", ""))
-                      );
-                      return (
-                        <div key={dept}>
-                          <h4 className="font-medium mb-2">{dept} Department ({deptStudents.length})</h4>
-                          <div className="space-y-2">
-                            {deptStudents.slice(0, 3).map((student: any, idx: number) => (
-                              <Card key={student.id} className="bg-muted/30">
-                                <CardContent className="pt-3 space-y-1 text-xs">
-                                  <p><strong>Name:</strong> {student.name}</p>
-                                  <p><strong>Email:</strong> {student.email}</p>
-                                  <p><strong>Password:</strong> {student.password}</p>
-                                </CardContent>
-                              </Card>
-                            ))}
-                            {deptStudents.length > 3 && (
-                              <p className="text-xs text-muted-foreground pl-2">
-                                ... and {deptStudents.length - 3} more students
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="space-y-2">
+                    {credentials.students.slice(0, 20).map((student: any) => (
+                      <Card key={student.id} className="bg-muted/30">
+                        <CardContent className="pt-3 space-y-1 text-xs">
+                          <p><strong>Name:</strong> {student.name}</p>
+                          <p><strong>Email:</strong> {student.email}</p>
+                          <p><strong>Password:</strong> {student.password}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {credentials.students.length > 20 && (
+                      <p className="text-xs text-muted-foreground pl-2">
+                        ... and {credentials.students.length - 20} more students
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -190,28 +166,16 @@ export const SampleDataInitializer = () => {
                     <h3 className="text-lg font-semibold">Staff Accounts</h3>
                     <Badge>{credentials.staff.length}</Badge>
                   </div>
-                  <div className="space-y-4">
-                    {["MCA", "BE-CSE", "BE-IT", "BE-BME", "BE-MECH", "BE-CIVIL", "BE-EEE", "BE-ECE"].map(dept => {
-                      const deptStaff = credentials.staff.filter((s: any) => 
-                        s.email.toLowerCase().includes(dept.toLowerCase().replace("-", ""))
-                      );
-                      return (
-                        <div key={dept}>
-                          <h4 className="font-medium mb-2">{dept} Department ({deptStaff.length})</h4>
-                          <div className="space-y-2">
-                            {deptStaff.map((staff: any) => (
-                              <Card key={staff.id} className="bg-muted/30">
-                                <CardContent className="pt-3 space-y-1 text-xs">
-                                  <p><strong>Name:</strong> {staff.name}</p>
-                                  <p><strong>Email:</strong> {staff.email}</p>
-                                  <p><strong>Password:</strong> {staff.password}</p>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="space-y-2">
+                    {credentials.staff.map((staff: any) => (
+                      <Card key={staff.id} className="bg-muted/30">
+                        <CardContent className="pt-3 space-y-1 text-xs">
+                          <p><strong>Name:</strong> {staff.name}</p>
+                          <p><strong>Email:</strong> {staff.email}</p>
+                          <p><strong>Password:</strong> {staff.password}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 </div>
               </div>
