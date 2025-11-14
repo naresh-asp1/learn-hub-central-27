@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { initializeSampleData } from "@/utils/sampleData";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -16,6 +17,18 @@ const Auth = () => {
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
   const [registerRole, setRegisterRole] = useState("");
+
+  // Auto-initialize sample data on first load if no users exist
+  useEffect(() => {
+    try {
+      const existing = JSON.parse(localStorage.getItem("users") || "[]");
+      if (!existing || existing.length === 0) {
+        initializeSampleData();
+      }
+    } catch {
+      initializeSampleData();
+    }
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
