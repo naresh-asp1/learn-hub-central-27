@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { LogOut, Plus, CheckCircle, XCircle } from "lucide-react";
 import { MarksEntry } from "@/components/MarksEntry";
 import { PerformanceReport } from "@/components/PerformanceReport";
+import { AttendanceView } from "@/components/AttendanceView";
+import { SubjectAllocationView } from "@/components/SubjectAllocationView";
 
 interface Student {
   id: string;
@@ -265,9 +267,11 @@ const StaffDashboard = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="attendance">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="attendance">Attendance</TabsTrigger>
                 <TabsTrigger value="marks-entry">Marks Entry</TabsTrigger>
+                <TabsTrigger value="attendance-view">Attendance View</TabsTrigger>
+                <TabsTrigger value="allocations">My Allocations</TabsTrigger>
                 <TabsTrigger value="performance">Performance Reports</TabsTrigger>
                 <TabsTrigger value="marks">Old Marks</TabsTrigger>
                 <TabsTrigger value="requests">
@@ -606,6 +610,14 @@ const StaffDashboard = () => {
                 {pendingRequests.length === 0 && (
                   <p className="text-center text-muted-foreground py-8">No pending requests</p>
                 )}
+              </TabsContent>
+
+              <TabsContent value="attendance-view">
+                <AttendanceView />
+              </TabsContent>
+
+              <TabsContent value="allocations">
+                <SubjectAllocationView />
               </TabsContent>
             </Tabs>
           </CardContent>

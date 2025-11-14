@@ -58,6 +58,16 @@ export const SampleDataInitializer = () => {
       text += "\n";
     });
 
+    text += `\n\nPARENT ACCOUNTS (${credentials.parents.length} Total):\n`;
+    text += "=".repeat(80) + "\n";
+    credentials.parents.forEach((parent: any) => {
+      text += `Name: ${parent.name}\n`;
+      text += `Child: ${parent.childName} (${parent.childRollNumber})\n`;
+      text += `Email: ${parent.email}\n`;
+      text += `Password: ${parent.password}\n`;
+      text += "\n";
+    });
+
     const blob = new Blob([text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -176,6 +186,32 @@ export const SampleDataInitializer = () => {
                         </CardContent>
                       </Card>
                     ))}
+                  </div>
+                </div>
+
+                {/* Parent Accounts */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">Parent Accounts</h3>
+                    <Badge>{credentials.parents.length}</Badge>
+                  </div>
+                  <div className="space-y-2">
+                    {credentials.parents.slice(0, 20).map((parent: any) => (
+                      <Card key={parent.id} className="bg-muted/30">
+                        <CardContent className="pt-3 space-y-1 text-xs">
+                          <p><strong>Name:</strong> {parent.name}</p>
+                          <p><strong>Child:</strong> {parent.childName} ({parent.childRollNumber})</p>
+                          <p><strong>Email:</strong> {parent.email}</p>
+                          <p><strong>Password:</strong> {parent.password}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {credentials.parents.length > 20 && (
+                      <p className="text-xs text-muted-foreground pl-2">
+                        ... and {credentials.parents.length - 20} more parents
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
