@@ -14,6 +14,8 @@ import { LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle } from "lucide-react
 import { SampleDataInitializer } from "@/components/SampleDataInitializer";
 import { SubjectManagement } from "@/components/SubjectManagement";
 import { PerformanceReport } from "@/components/PerformanceReport";
+import { AttendanceView } from "@/components/AttendanceView";
+import { SubjectAllocationView } from "@/components/SubjectAllocationView";
 
 interface Student {
   id: string;
@@ -274,11 +276,13 @@ const Admin1Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="students" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="staff">Staff</TabsTrigger>
             <TabsTrigger value="subjects">Subjects</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="allocations">Allocations</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="requests">
               Requests
@@ -601,6 +605,14 @@ const Admin1Dashboard = () => {
 
           <TabsContent value="subjects">
             <SubjectManagement />
+          </TabsContent>
+
+          <TabsContent value="attendance">
+            <AttendanceView />
+          </TabsContent>
+
+          <TabsContent value="allocations">
+            <SubjectAllocationView />
           </TabsContent>
 
           <TabsContent value="performance">
