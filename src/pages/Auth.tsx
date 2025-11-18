@@ -82,22 +82,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
-      <div className="w-full max-w-4xl space-y-6">
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Sample Login Credentials:</strong>
-            <div className="mt-2 space-y-1 text-xs">
-              <div><strong>Admin1:</strong> admin1@npv.edu / admin123</div>
-              <div><strong>Admin2:</strong> admin2@npv.edu / admin123</div>
-              <div><strong>Student:</strong> arjun1.mca@student.npv.edu / studentMCA001</div>
-              <div><strong>Staff:</strong> rajesh.kumar1@staff.npv.edu / staffMCA1</div>
-              <div><strong>Parent:</strong> parent.arjun1@parent.npv.edu / parentMCA001</div>
-            </div>
-          </AlertDescription>
-        </Alert>
-        
-        <Card className="w-full max-w-md mx-auto">
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Student Management System</CardTitle>
           <CardDescription>Login or create an account to continue</CardDescription>
@@ -187,7 +172,6 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
-      </div>
     </div>
   );
 };

@@ -14,10 +14,17 @@ interface Student {
   department: string;
 }
 
+interface AttendanceRecord {
+  studentId: string;
+  date: string;
+  status: string;
+}
+
 export const PerformanceReport = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [marks, setMarks] = useState<Mark[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [selectedSemester, setSelectedSemester] = useState<number>(1);
 
@@ -25,10 +32,12 @@ export const PerformanceReport = () => {
     const savedStudents = JSON.parse(localStorage.getItem("students") || "[]");
     const savedSubjects = JSON.parse(localStorage.getItem("subjects") || "[]");
     const savedMarks = JSON.parse(localStorage.getItem("marks") || "[]");
+    const savedAttendance = JSON.parse(localStorage.getItem("attendance") || "[]");
     
     setStudents(savedStudents);
     setSubjects(savedSubjects);
     setMarks(savedMarks);
+    setAttendance(savedAttendance);
   }, []);
 
   const selectedStudentData = students.find(s => s.id === selectedStudent);
@@ -79,6 +88,16 @@ export const PerformanceReport = () => {
   const overallPercentage = maxTotalMarks > 0 ? (totalMarks / maxTotalMarks) * 100 : 0;
   const overallGrade = calculateGrade(overallPercentage).grade;
 
+  const calculateAttendancePercentage = () => {
+    if (!selectedStudent) return 0;
+    const studentAttendance = attendance.filter(a => a.studentId === selectedStudent);
+    if (studentAttendance.length === 0) return 0;
+    const present = studentAttendance.filter(a => a.status === "present").length;
+    return Math.round((present / studentAttendance.length) * 100);
+  };
+
+  const attendancePercentage = calculateAttendancePercentage();
+
   return (
     <div className="space-y-6">
       <Card>
@@ -123,7 +142,7 @@ export const PerformanceReport = () => {
 
       {selectedStudent && selectedStudentData && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2">
@@ -155,6 +174,18 @@ export const PerformanceReport = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Percentage</p>
                     <p className="text-2xl font-bold">{overallPercentage.toFixed(2)}%</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Attendance</p>
+                    <p className="text-2xl font-bold">{attendancePercentage}%</p>
                   </div>
                 </div>
               </CardContent>
