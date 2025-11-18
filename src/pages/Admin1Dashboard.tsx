@@ -16,6 +16,7 @@ import { SubjectManagement } from "@/components/SubjectManagement";
 import { PerformanceReport } from "@/components/PerformanceReport";
 import { AttendanceView } from "@/components/AttendanceView";
 import { SubjectAllocationView } from "@/components/SubjectAllocationView";
+import { CredentialsViewer } from "@/components/CredentialsViewer";
 
 interface Student {
   id: string;
@@ -276,7 +277,7 @@ const Admin1Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="students" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-9">
+          <TabsList className="grid w-full grid-cols-10">
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="staff">Staff</TabsTrigger>
@@ -290,6 +291,7 @@ const Admin1Dashboard = () => {
                 <Badge variant="destructive" className="ml-2">{verifiedPendingRequests.length}</Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="credentials">Credentials</TabsTrigger>
             <TabsTrigger value="sample-data">Sample Data</TabsTrigger>
           </TabsList>
 
@@ -617,6 +619,10 @@ const Admin1Dashboard = () => {
 
           <TabsContent value="performance">
             <PerformanceReport />
+          </TabsContent>
+
+          <TabsContent value="credentials">
+            <CredentialsViewer />
           </TabsContent>
 
           <TabsContent value="sample-data">
