@@ -7,8 +7,10 @@ export const initializeSampleData = () => {
   localStorage.removeItem("users");
   localStorage.removeItem("changeRequests");
   localStorage.removeItem("attendance");
+  localStorage.removeItem("marks");
   localStorage.removeItem("subjectAllocations");
   localStorage.removeItem("studentAllocations");
+  localStorage.removeItem("parents");
 
   // Define departments
   const departments = [
