@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { initializeSampleData } from "@/utils/sampleData";
-import { Info } from "lucide-react";
+import { Info, RefreshCw, Copy } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ const Auth = () => {
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
   const [registerRole, setRegisterRole] = useState("");
+  const [showCredentials, setShowCredentials] = useState(false);
+  const [sampleUsers, setSampleUsers] = useState<any[]>([]);
 
   // Auto-initialize sample data on first load if no users exist
   useEffect(() => {
@@ -27,10 +30,39 @@ const Auth = () => {
       if (!existing || existing.length === 0) {
         initializeSampleData();
       }
+      loadSampleUsers();
     } catch {
       initializeSampleData();
+      loadSampleUsers();
     }
   }, []);
+
+  const loadSampleUsers = () => {
+    try {
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const samples = [
+        users.find((u: any) => u.role === "admin1"),
+        users.find((u: any) => u.role === "admin2"),
+        users.find((u: any) => u.role === "student"),
+        users.find((u: any) => u.role === "staff"),
+        users.find((u: any) => u.role === "parent")
+      ].filter(Boolean);
+      setSampleUsers(samples);
+    } catch (error) {
+      console.error("Error loading sample users:", error);
+    }
+  };
+
+  const handleReinitialize = () => {
+    initializeSampleData();
+    loadSampleUsers();
+    toast.success("Sample data reinitialized! Please try logging in again.");
+  };
+
+  const copyCredentials = (email: string, password: string) => {
+    navigator.clipboard.writeText(`Email: ${email}\nPassword: ${password}`);
+    toast.success("Credentials copied to clipboard!");
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +114,60 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
-      <Card className="w-full max-w-md">
+      <div className="w-full max-w-2xl space-y-4">
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>Having trouble logging in? View sample credentials below or reinitialize data.</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleReinitialize}
+              className="ml-2"
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Reset Data
+            </Button>
+          </AlertDescription>
+        </Alert>
+
+        <Collapsible open={showCredentials} onOpenChange={setShowCredentials}>
+          <Card>
+            <CardHeader className="pb-3">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0 hover:bg-transparent">
+                  <CardTitle className="text-base">Sample Login Credentials</CardTitle>
+                  <span className="text-xs text-muted-foreground">
+                    {showCredentials ? "Hide" : "Show"}
+                  </span>
+                </Button>
+              </CollapsibleTrigger>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent className="space-y-3">
+                {sampleUsers.map((user, index) => (
+                  <div key={index} className="p-3 bg-muted/50 rounded-lg space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold capitalize">{user.role.replace(/\d/, ' ')}</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyCredentials(user.email, user.password)}
+                        className="h-7 px-2"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p className="text-xs"><span className="font-medium">Email:</span> {user.email}</p>
+                    <p className="text-xs"><span className="font-medium">Password:</span> {user.password}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
+      <Card className="w-full max-w-md mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl">Student Management System</CardTitle>
           <CardDescription>Login or create an account to continue</CardDescription>
@@ -172,6 +257,7 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
