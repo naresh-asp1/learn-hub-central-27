@@ -7,10 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { initializeSampleData } from "@/utils/sampleData";
-import { Info, RefreshCw, Copy } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -19,158 +17,98 @@ const Auth = () => {
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
-  const [registerRole, setRegisterRole] = useState("");
-  const [showCredentials, setShowCredentials] = useState(false);
-  const [sampleUsers, setSampleUsers] = useState<any[]>([]);
+  const [registerRole, setRegisterRole] = useState<Database['public']['Enums']['app_role']>('student');
+  const [loading, setLoading] = useState(false);
 
-  // Auto-initialize sample data on first load if no users exist
   useEffect(() => {
-    try {
-      const existing = JSON.parse(localStorage.getItem("users") || "[]");
-      if (!existing || existing.length === 0) {
-        initializeSampleData();
-      }
-      loadSampleUsers();
-    } catch {
-      initializeSampleData();
-      loadSampleUsers();
-    }
+    checkUser();
   }, []);
 
-  const loadSampleUsers = () => {
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+      
+      if (roleData) {
+        navigate(`/${roleData.role}`);
+      }
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
     try {
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const samples = [
-        users.find((u: any) => u.role === "admin1"),
-        users.find((u: any) => u.role === "admin2"),
-        users.find((u: any) => u.role === "student"),
-        users.find((u: any) => u.role === "staff"),
-        users.find((u: any) => u.role === "parent")
-      ].filter(Boolean);
-      setSampleUsers(samples);
-    } catch (error) {
-      console.error("Error loading sample users:", error);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .single();
+
+        toast.success("Login successful!");
+
+        if (roleData) {
+          navigate(`/${roleData.role}`);
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleReinitialize = () => {
-    initializeSampleData();
-    loadSampleUsers();
-    toast.success("Sample data reinitialized! Please try logging in again.");
-  };
-
-  const copyCredentials = (email: string, password: string) => {
-    navigator.clipboard.writeText(`Email: ${email}\nPassword: ${password}`);
-    toast.success("Credentials copied to clipboard!");
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const user = users.find((u: any) => u.email === loginEmail && u.password === loginPassword);
-    
-    if (user) {
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      toast.success("Login successful!");
-      navigate(`/${user.role}`);
-    } else {
-      toast.error("Invalid credentials");
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: registerEmail,
+        password: registerPassword,
+        options: {
+          data: {
+            name: registerName,
+            role: registerRole,
+          },
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success("Registration successful! You can now login.");
+      
+      setRegisterEmail("");
+      setRegisterPassword("");
+      setRegisterName("");
+      setRegisterRole('student');
+    } catch (error: any) {
+      toast.error(error.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!registerRole) {
-      toast.error("Please select a role");
-      return;
-    }
-
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    
-    if (users.find((u: any) => u.email === registerEmail)) {
-      toast.error("Email already exists");
-      return;
-    }
-
-    const newUser = {
-      id: Date.now().toString(),
-      email: registerEmail,
-      password: registerPassword,
-      name: registerName,
-      role: registerRole
-    };
-
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-    toast.success("Registration successful! Please login.");
-    
-    setRegisterEmail("");
-    setRegisterPassword("");
-    setRegisterName("");
-    setRegisterRole("");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
-      <div className="w-full max-w-2xl space-y-4">
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>Having trouble logging in? View sample credentials below or reinitialize data.</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleReinitialize}
-              className="ml-2"
-            >
-              <RefreshCw className="h-3 w-3 mr-1" />
-              Reset Data
-            </Button>
-          </AlertDescription>
-        </Alert>
-
-        <Collapsible open={showCredentials} onOpenChange={setShowCredentials}>
-          <Card>
-            <CardHeader className="pb-3">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0 hover:bg-transparent">
-                  <CardTitle className="text-base">Sample Login Credentials</CardTitle>
-                  <span className="text-xs text-muted-foreground">
-                    {showCredentials ? "Hide" : "Show"}
-                  </span>
-                </Button>
-              </CollapsibleTrigger>
-            </CardHeader>
-            <CollapsibleContent>
-              <CardContent className="space-y-3">
-                {sampleUsers.map((user, index) => (
-                  <div key={index} className="p-3 bg-muted/50 rounded-lg space-y-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold capitalize">{user.role.replace(/\d/, ' ')}</p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyCredentials(user.email, user.password)}
-                        className="h-7 px-2"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <p className="text-xs"><span className="font-medium">Email:</span> {user.email}</p>
-                    <p className="text-xs"><span className="font-medium">Password:</span> {user.password}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-
-      <Card className="w-full max-w-md mx-auto">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-muted/50 to-background">
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Student Management System</CardTitle>
-          <CardDescription>Login or create an account to continue</CardDescription>
+          <CardTitle>Student Management System</CardTitle>
+          <CardDescription>Login or register to access the system</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login">
@@ -178,7 +116,7 @@ const Auth = () => {
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
@@ -186,6 +124,7 @@ const Auth = () => {
                   <Input
                     id="login-email"
                     type="email"
+                    placeholder="Enter your email"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     required
@@ -196,21 +135,25 @@ const Auth = () => {
                   <Input
                     id="login-password"
                     type="password"
+                    placeholder="Enter your password"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full">Login</Button>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Logging in...' : 'Login'}
+                </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="register">
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="register-name">Full Name</Label>
+                  <Label htmlFor="register-name">Name</Label>
                   <Input
                     id="register-name"
+                    placeholder="Enter your name"
                     value={registerName}
                     onChange={(e) => setRegisterName(e.target.value)}
                     required
@@ -221,6 +164,7 @@ const Auth = () => {
                   <Input
                     id="register-email"
                     type="email"
+                    placeholder="Enter your email"
                     value={registerEmail}
                     onChange={(e) => setRegisterEmail(e.target.value)}
                     required
@@ -231,6 +175,7 @@ const Auth = () => {
                   <Input
                     id="register-password"
                     type="password"
+                    placeholder="Enter your password"
                     value={registerPassword}
                     onChange={(e) => setRegisterPassword(e.target.value)}
                     required
@@ -238,9 +183,9 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-role">Role</Label>
-                  <Select value={registerRole} onValueChange={setRegisterRole}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
+                  <Select value={registerRole} onValueChange={(value) => setRegisterRole(value as Database['public']['Enums']['app_role'])}>
+                    <SelectTrigger id="register-role">
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="admin1">Admin 1</SelectItem>
@@ -251,13 +196,14 @@ const Auth = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" className="w-full">Register</Button>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Registering...' : 'Register'}
+                </Button>
               </form>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-      </div>
     </div>
   );
 };
