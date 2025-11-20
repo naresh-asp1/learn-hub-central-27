@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { LogOut, CheckCircle, XCircle, FileDown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
   id: string;
@@ -38,8 +39,23 @@ const Admin2Dashboard = () => {
   const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>([]);
 
   useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    if (currentUser.role !== "admin2") {
+    checkAuth();
+  }, [navigate]);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!roleData || roleData.role !== 'admin2') {
       navigate("/auth");
       return;
     }
@@ -48,10 +64,10 @@ const Admin2Dashboard = () => {
     const savedRequests = JSON.parse(localStorage.getItem("changeRequests") || "[]");
     setStudents(savedStudents);
     setChangeRequests(savedRequests);
-  }, [navigate]);
+  };
 
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/auth");
   };
 

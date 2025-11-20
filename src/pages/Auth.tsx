@@ -19,6 +19,8 @@ const Auth = () => {
   const [registerName, setRegisterName] = useState("");
   const [registerRole, setRegisterRole] = useState<Database['public']['Enums']['app_role']>('student');
   const [loading, setLoading] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [showReset, setShowReset] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -103,6 +105,27 @@ const Auth = () => {
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) throw error;
+
+      toast.success("Password reset email sent! Check your inbox.");
+      setShowReset(false);
+      setResetEmail("");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reset email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-muted/50 to-background">
       <Card className="w-full max-w-md">
@@ -143,6 +166,14 @@ const Auth = () => {
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Logging in...' : 'Login'}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="link" 
+                  className="w-full" 
+                  onClick={() => setShowReset(true)}
+                >
+                  Forgot Password?
                 </Button>
               </form>
             </TabsContent>
@@ -204,6 +235,48 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Password Reset Dialog */}
+      {showReset && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Reset Password</CardTitle>
+              <CardDescription>Enter your email to receive a password reset link</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handlePasswordReset} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1" disabled={loading}>
+                    {loading ? 'Sending...' : 'Send Reset Link'}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowReset(false);
+                      setResetEmail("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

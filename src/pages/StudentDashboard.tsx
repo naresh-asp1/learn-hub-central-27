@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { LogOut, FileEdit } from "lucide-react";
 import { StudentPerformanceView } from "@/components/StudentPerformanceView";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
   id: string;
@@ -36,19 +37,34 @@ const StudentDashboard = () => {
   const [newValue, setNewValue] = useState("");
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    if (user.role !== "student") {
+    checkAuth();
+  }, [navigate]);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       navigate("/auth");
       return;
     }
 
-    setCurrentUser(user);
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!roleData || roleData.role !== 'student') {
+      navigate("/auth");
+      return;
+    }
+
+    setCurrentUser({ id: session.user.id, role: 'student' });
     const savedStudents = JSON.parse(localStorage.getItem("students") || "[]");
     setStudents(savedStudents);
-  }, [navigate]);
+  };
 
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/auth");
   };
 

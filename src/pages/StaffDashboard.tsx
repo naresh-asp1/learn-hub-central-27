@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { LogOut, Plus, CheckCircle, XCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { MarksEntry } from "@/components/MarksEntry";
 import { PerformanceReport } from "@/components/PerformanceReport";
 import { AttendanceView } from "@/components/AttendanceView";
@@ -76,8 +77,23 @@ const StaffDashboard = () => {
   const [selectedDepartment, setSelectedDepartment] = useState("");
 
   useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    if (currentUser.role !== "staff") {
+    checkAuth();
+  }, [navigate]);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!roleData || roleData.role !== 'staff') {
       navigate("/auth");
       return;
     }
@@ -91,10 +107,10 @@ const StaffDashboard = () => {
     setAttendanceRecords(savedAttendance);
     setRecords(savedRecords);
     setRequests(savedRequests);
-  }, [navigate]);
+  };
 
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/auth");
   };
 
@@ -267,13 +283,12 @@ const StaffDashboard = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="attendance">
-              <TabsList className="grid w-full grid-cols-7">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="attendance">Attendance</TabsTrigger>
                 <TabsTrigger value="marks-entry">Marks Entry</TabsTrigger>
                 <TabsTrigger value="attendance-view">Attendance View</TabsTrigger>
                 <TabsTrigger value="allocations">My Allocations</TabsTrigger>
                 <TabsTrigger value="performance">Performance Reports</TabsTrigger>
-                <TabsTrigger value="marks">Old Marks</TabsTrigger>
                 <TabsTrigger value="requests">
                   Requests
                   {pendingRequests.length > 0 && (
@@ -372,7 +387,7 @@ const StaffDashboard = () => {
                 <PerformanceReport />
               </TabsContent>
               
-              <TabsContent value="marks" className="space-y-4">
+              <TabsContent value="requests" className="space-y-4">
                 <div className="flex justify-end mb-4">
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>

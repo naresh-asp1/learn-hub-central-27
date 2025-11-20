@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { SampleDataInitializer } from "@/components/SampleDataInitializer";
 import { SubjectManagement } from "@/components/SubjectManagement";
 import { PerformanceReport } from "@/components/PerformanceReport";
@@ -83,8 +84,23 @@ const Admin1Dashboard = () => {
   const [staffForm, setStaffForm] = useState({ name: "", email: "", department: "" });
 
   useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    if (currentUser.role !== "admin1") {
+    checkAuth();
+  }, [navigate]);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!roleData || roleData.role !== 'admin1') {
       navigate("/auth");
       return;
     }
@@ -98,10 +114,10 @@ const Admin1Dashboard = () => {
     setDepartments(savedDepartments);
     setStaff(savedStaff);
     setChangeRequests(savedRequests);
-  }, [navigate]);
+  };
 
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/auth");
   };
 
