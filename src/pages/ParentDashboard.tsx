@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { LogOut, Download } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
   id: string;
@@ -45,27 +46,50 @@ const ParentDashboard = () => {
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [performanceReports, setPerformanceReports] = useState<PerformanceReport[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    if (currentUser.role !== "parent") {
+    checkAuth();
+  }, [navigate]);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       navigate("/auth");
       return;
     }
 
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!roleData || roleData.role !== 'parent') {
+      navigate("/auth");
+      return;
+    }
+
+    setCurrentUserId(session.user.id);
+
     const allStudents = JSON.parse(localStorage.getItem("students") || "[]");
-    const myChildren = allStudents.filter((s: Student) => s.parentId === currentUser.id);
+    const myChildren = allStudents.filter((s: Student) => s.parentId === session.user.id);
     setStudents(myChildren);
+
+    // Auto-select the first child if available
+    if (myChildren.length > 0 && !selectedStudent) {
+      setSelectedStudent(myChildren[0].id);
+    }
 
     const attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
     setAttendanceRecords(attendance);
 
     const reports = JSON.parse(localStorage.getItem("performanceReports") || "[]");
     setPerformanceReports(reports);
-  }, [navigate]);
+  };
 
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/auth");
   };
 
@@ -130,29 +154,16 @@ const ParentDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Student</CardTitle>
-            <CardDescription>View details for your child</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a student" />
-              </SelectTrigger>
-              <SelectContent>
-                {students.map(student => (
-                  <SelectItem key={student.id} value={student.id}>
-                    {student.name} ({student.rollNumber})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-
-        {selectedStudentData && (
-          <>
+        {students.length === 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>No Children Found</CardTitle>
+              <CardDescription>No student records are linked to your account.</CardDescription>
+            </CardHeader>
+          </Card>
+        ) : (
+          selectedStudentData && (
+            <>
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
@@ -297,7 +308,7 @@ const ParentDashboard = () => {
               </CardContent>
             </Card>
           </>
-        )}
+        ))}
       </main>
     </div>
   );
