@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { SupabaseSampleDataInitializer } from "@/components/SupabaseSampleDataInitializer";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -128,7 +129,10 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-muted/50 to-background">
-      <Card className="w-full max-w-md">
+      <div className="w-full max-w-4xl space-y-6">
+        <SupabaseSampleDataInitializer />
+        
+        <Card className="w-full max-w-md mx-auto">
         <CardHeader>
           <CardTitle>Student Management System</CardTitle>
           <CardDescription>Login or register to access the system</CardDescription>
@@ -277,6 +281,7 @@ const Auth = () => {
           </Card>
         </div>
       )}
+      </div>
     </div>
   );
 };
